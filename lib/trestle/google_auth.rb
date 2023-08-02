@@ -31,7 +31,9 @@ module Trestle
     # and access token requests.
     OAUTH2_ERRORS = authorization_request_errors | access_token_request_errors
 
+    require_relative "google_auth/backend"
     require_relative "google_auth/configuration"
+    require_relative "google_auth/constraint"
 
     module Controller
       require_relative "google_auth/controller/authentication"
