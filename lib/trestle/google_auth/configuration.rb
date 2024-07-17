@@ -39,10 +39,8 @@ module Trestle
         end
       }, evaluate: false
 
-      option :login_url, -> { login_url }, evaluate: false
-
       option :redirect_on_login, -> { Trestle.config.path }, evaluate: false
-      option :redirect_on_logout, -> { login_url }, evaluate: false
+      option :redirect_on_logout, -> { Trestle.config.path }, evaluate: false
 
       option :logo
     end

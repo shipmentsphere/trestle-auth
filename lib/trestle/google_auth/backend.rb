@@ -45,41 +45,22 @@ module Trestle
 
       def resume_session(user)
         user.update!(last_active_at: Time.now) if user.last_active_at.before?(ACTIVITY_REFRESH_RATE.ago)
-        session[:trestle_user] = { value: user.id, httponly: true }
+        cookies.signed.permanent[:trestle_user] = { value: user.id, httponly: true }
       end
 
       # Authenticates a user from a login form request.
       def authenticate!
-        user = Trestle.config.google_auth.user_class.find_or_create_by(email: google_identity.email_address,
+        @user = Trestle.config.google_auth.user_class.find_or_create_by(email: google_identity.email_address,
                                                                        first_name: google_identity.given_name,
                                                                        last_name: google_identity.family_name)
 
-        login!(user)
-        user
-      end
-
-      # Authenticates a user from the session or cookie. Called on each request via a before_action.
-      def authenticate
-        @authenticate ||= find_authenticated_user || redirect_to_login
-      end
-
-      # Checks if there is a logged in user.
-      def logged_in?
-        !!user
-      end
-
-      # Stores the given user in the session as logged in.
-      def login!(user)
-        session[:trestle_user] = user.id
-
-        user.update!(last_active_at: Time.now) if user.last_active_at.before?(ACTIVITY_REFRESH_RATE.ago)
-
-        @user = user
+        resume_session(@user)
+        @user
       end
 
       # Logs out the current user.
       def logout!
-        session.delete(:trestle_user)
+        cookies.delete(:trestle_user)
         @user = nil
       end
 
@@ -91,11 +72,9 @@ module Trestle
       protected
 
       def find_authenticated_user
-        Trestle.config.google_auth.find_user(session[:trestle_user]) if session[:trestle_user]
-      end
-
-      def login_params
-        controller.params.require(:user).permit!
+        if user_id = cookies.signed[:trestle_user]
+          Trestle.config.google_auth.find_user(user_id)
+        end
       end
 
       private

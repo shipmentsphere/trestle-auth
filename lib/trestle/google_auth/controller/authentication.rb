@@ -7,7 +7,7 @@ module Trestle
         extend ActiveSupport::Concern
 
         included do
-          helper_method :current_user, :logged_in?
+          helper_method :current_user
 
           prepend_before_action :require_authentication
 
@@ -18,8 +18,12 @@ module Trestle
         protected
 
         def authentication_backend
-          @authentication_backend ||= Trestle::GoogleAuth::Backend.new(controller: self, request: request,
-                                                                       session: session, cookies: cookies)
+          @authentication_backend ||= Trestle::GoogleAuth::Backend.new(
+            controller: self,
+            request: request,
+            session: session,
+            cookies: cookies
+          )
         end
 
         def current_user

@@ -33,7 +33,6 @@ module Trestle
 
     require_relative "google_auth/backend"
     require_relative "google_auth/configuration"
-    require_relative "google_auth/constraint"
 
     module Controller
       require_relative "google_auth/controller/authentication"
