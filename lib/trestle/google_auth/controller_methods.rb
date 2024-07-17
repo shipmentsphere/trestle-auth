@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Trestle
   module GoogleAuth
     module ControllerMethods

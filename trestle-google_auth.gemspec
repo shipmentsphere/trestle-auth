@@ -6,7 +6,7 @@ Gem::Specification.new do |spec|
   spec.name = "trestle-google_auth"
   spec.version = Trestle::GoogleAuth::VERSION
   spec.authors = ["Mikko Kokkonen"]
-  spec.email = ["mikko@mikian.com"]
+  spec.email = ["mikko@shipmentsphere.com"]
 
   spec.summary = "Add authentication via Google SSO for Trestle."
   spec.homepage = "https://github.com/shipmentsphere/trestle-google_auth"

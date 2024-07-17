@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Trestle
   module GoogleAuth
     class Configuration
@@ -6,12 +8,10 @@ module Trestle
       option :client_id
       option :client_secret
 
-      option :oauth_proxy
       option :allowed_domains, -> { [] }
 
       option :user_class, -> { ::Administrator }
       option :user_scope, -> { Trestle.config.google_auth.user_class }
-      option :user_admin
 
       option :find_user, lambda { |id|
         Trestle.config.google_auth.user_scope.find_by(id: id)

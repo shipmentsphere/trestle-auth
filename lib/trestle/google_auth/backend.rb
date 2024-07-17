@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "oauth2"
 require "securerandom"
 
@@ -6,6 +8,8 @@ require "trestle/google_auth/identity"
 module Trestle
   module GoogleAuth
     class Backend
+      ACTIVITY_REFRESH_RATE = 1.hour
+
       attr_reader :controller, :request, :session, :cookies
 
       def initialize(controller:, request:, session:, cookies:)
@@ -13,11 +17,6 @@ module Trestle
         @request = request
         @session = session
         @cookies = cookies
-      end
-
-      # Default params scope to use for the login form.
-      def scope
-        :user
       end
 
       # Stores the previous return location in the session to return to after logging in.
@@ -33,9 +32,27 @@ module Trestle
       # Returns the current logged in user (after #authentication).
       attr_reader :user
 
+      def restore_authentication
+        return unless (@user = find_authenticated_user)
+
+        resume_session(@user)
+      end
+
+      def request_authentication
+        session[:return_to_after_authenticating] = request.fullpath
+        redirect_to_login
+      end
+
+      def resume_session(user)
+        user.update!(last_active_at: Time.now) if user.last_active_at.before?(ACTIVITY_REFRESH_RATE.ago)
+        session[:trestle_user] = { value: user.id, httponly: true }
+      end
+
       # Authenticates a user from a login form request.
       def authenticate!
-        user = Trestle.config.google_auth.user_class.find_or_create_by(email: google_identity.email_address, first_name: google_identity.given_name, last_name: google_identity.family_name)
+        user = Trestle.config.google_auth.user_class.find_or_create_by(email: google_identity.email_address,
+                                                                       first_name: google_identity.given_name,
+                                                                       last_name: google_identity.family_name)
 
         login!(user)
         user
@@ -43,7 +60,7 @@ module Trestle
 
       # Authenticates a user from the session or cookie. Called on each request via a before_action.
       def authenticate
-        @user ||= find_authenticated_user || redirect_to_login
+        @authenticate ||= find_authenticated_user || redirect_to_login
       end
 
       # Checks if there is a logged in user.
@@ -54,6 +71,9 @@ module Trestle
       # Stores the given user in the session as logged in.
       def login!(user)
         session[:trestle_user] = user.id
+
+        user.update!(last_active_at: Time.now) if user.last_active_at.before?(ACTIVITY_REFRESH_RATE.ago)
+
         @user = user
       end
 
@@ -63,15 +83,15 @@ module Trestle
         @user = nil
       end
 
+      def redirect_to_login
+        controller.redirect_to login_url(scope: "openid profile email", state: state), flash: { state: state },
+                                                                                       allow_other_host: true
+      end
+
       protected
 
       def find_authenticated_user
         Trestle.config.google_auth.find_user(session[:trestle_user]) if session[:trestle_user]
-      end
-
-      def redirect_to_login
-        controller.redirect_to login_url(scope: "openid profile email", state: state), flash: { state: state },
-                                                                                       allow_other_host: true
       end
 
       def login_params
@@ -90,16 +110,12 @@ module Trestle
           Trestle.config.google_auth.client_secret,
           authorize_url: "https://accounts.google.com/o/oauth2/auth",
           token_url: "https://oauth2.googleapis.com/token",
-          redirect_uri: (Trestle.config.google_auth.oauth_proxy || controller.callback_url)
+          redirect_uri: controller.callback_url
         )
       end
 
       def state
-        @state ||= if Trestle.config.google_auth.oauth_proxy
-                     Base64.encode64(controller.callback_url)
-                   else
-                     SecureRandom.base64(24)
-                   end
+        @state ||= SecureRandom.base64(24)
       end
 
       def google_identity
