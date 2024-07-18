@@ -50,9 +50,16 @@ module Trestle
 
       # Authenticates a user from a login form request.
       def authenticate!
-        @user = Trestle.config.google_auth.user_class.find_or_create_by(email: google_identity.email_address,
-                                                                       first_name: google_identity.given_name,
-                                                                       last_name: google_identity.family_name)
+        return unless Trestle.config.google_auth.allowed_domains.include?(google_identity.hosted_domain)
+
+        @user = Trestle.config.google_auth.user_class.find_or_create_by(email: google_identity.email_address)
+        @user.update(
+          {
+            "first_name" => google_identity.given_name,
+            "last_name" => google_identity.family_name,
+            "avatar" => google_identity.avatar_url
+          }.slice(*@user.attribute_names)
+        )
 
         resume_session(@user)
         @user
