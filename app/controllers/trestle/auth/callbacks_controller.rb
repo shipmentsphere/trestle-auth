@@ -1,15 +1,14 @@
 # frozen_string_literal: true
 
-require "oauth2"
-
 module Trestle
-  module GoogleAuth
+  module Auth
     class CallbacksController < Trestle::ApplicationController
       skip_before_action :require_authentication, only: [:show]
 
       def show
-        if authentication_backend.authenticate!
-          redirect_to authentication_backend.previous_location || instance_exec(&Trestle.config.google_auth.redirect_on_login)
+        if user = authentication_backend.authenticate!
+          start_new_session_for(user)
+          redirect_to post_authenticating_url(url: instance_exec(&Trestle.config.auth.redirect_on_login))
         else
           authentication_backend.redirect_to_login
         end

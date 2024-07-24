@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Trestle
-  module GoogleAuth
+  module Auth
     class Configuration
       include Configurable
 
@@ -11,24 +11,11 @@ module Trestle
       option :allowed_domains, -> { [] }
 
       option :user_class, -> { ::Administrator }
-      option :user_scope, -> { Trestle.config.google_auth.user_class }
+      option :user_scope, -> { Trestle.config.auth.user_class }
+      option :session_class, -> { ::Session }
 
       option :find_user, lambda { |id|
-        Trestle.config.google_auth.user_scope.find_by(id: id)
-      }
-
-      option :human_attribute_name, lambda { |field|
-        model = begin
-          Trestle.config.google_auth.user_class
-        rescue StandardError
-          nil
-        end
-
-        if model && model.respond_to?(:human_attribute_name)
-          model.human_attribute_name(field)
-        else
-          field.to_s.humanize
-        end
+        Trestle.config.auth.user_scope.find_by(id:)
       }
 
       option :format_user_name, lambda { |user|
@@ -41,8 +28,6 @@ module Trestle
 
       option :redirect_on_login, -> { Trestle.config.path }, evaluate: false
       option :redirect_on_logout, -> { Trestle.config.path }, evaluate: false
-
-      option :logo
     end
   end
 end

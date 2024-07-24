@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 module Trestle
-  module GoogleAuth
+  module Auth
     module ControllerMethods
       extend ActiveSupport::Concern
 
-      include Trestle::GoogleAuth::Controller::Authentication
+      include Trestle::Auth::Controller::Authentication
     end
   end
 end

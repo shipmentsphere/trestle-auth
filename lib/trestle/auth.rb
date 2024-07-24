@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require_relative "google_auth/version"
+require_relative "auth/version"
 
 require "trestle"
 
 module Trestle
-  module GoogleAuth
+  module Auth
     # https://tools.ietf.org/html/rfc6749#section-4.1.2.1
     authorization_request_errors = %w[
       invalid_request
@@ -31,17 +31,17 @@ module Trestle
     # and access token requests.
     OAUTH2_ERRORS = authorization_request_errors | access_token_request_errors
 
-    require_relative "google_auth/backend"
-    require_relative "google_auth/configuration"
+    require_relative "auth/backend"
+    require_relative "auth/configuration"
 
     module Controller
-      require_relative "google_auth/controller/authentication"
+      require_relative "auth/controller/authentication"
     end
 
-    require_relative "google_auth/controller_methods"
+    require_relative "auth/controller_methods"
   end
 
-  Configuration.option :google_auth, GoogleAuth::Configuration.new
+  Configuration.option :auth, Auth::Configuration.new
 end
 
-require_relative "google_auth/engine" if defined?(Rails)
+require_relative "auth/engine" if defined?(Rails)

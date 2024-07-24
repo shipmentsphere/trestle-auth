@@ -3,7 +3,7 @@
 require "google-id-token"
 
 module Trestle
-  module GoogleAuth
+  module Auth
     class Identity
       class ValidationError < StandardError; end
 
@@ -54,7 +54,7 @@ module Trestle
       end
 
       def extract_payload(token)
-        @payload = validator.check(token, Trestle.config.google_auth.client_id)
+        @payload = validator.check(token, Trestle.config.auth.client_id)
       rescue GoogleIDToken::ValidationError => e
         raise ValidationError, e.message
       end
