@@ -29,7 +29,7 @@ module Trestle
 
         def find_session_by_cookie
           if token = cookies.signed[:session_token]
-            Session.find_by(token:)
+            Session.find_by(user_type: Trestle.config.auth.user_class.name, token: token)
           end
         end
 
